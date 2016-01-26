@@ -1,0 +1,2 @@
+ - [ ] load_current_resource, especially for flannel
+ - [ ] 
