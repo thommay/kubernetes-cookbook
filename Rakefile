@@ -107,6 +107,6 @@ task :generate do
 
     next if b[:properties].nil?
     out = erb.evaluate(b)
-    File.open("libraries/dummy_kubernetes_#{snake}.rb", "w") { |fh| fh.write out }
+    File.open("libraries/generated_kubernetes_#{snake}.rb", "w") { |fh| fh.write out }
   end
 end

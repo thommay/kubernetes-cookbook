@@ -3,8 +3,6 @@ module KubernetesCookbook
 
     # Service is a named abstraction of software service (for example, mysql) consisting of local port (for example 3306) that the proxy listens on, and the selector that determines which pods will answer requests sent through the proxy.
     use_automatic_resource_name
-    @class_name = "Service"
-    @type_name = "service"
 
     property :ports, Array, required: true, coerce: proc { |v| coerce_ports(v) }
     property :selector, [Hash, nil], default: {}, coerce: proc { |v| coerce_selector(v) }
@@ -21,7 +19,7 @@ module KubernetesCookbook
     load_current_value do
       retries = 3
       begin
-        current = get_item(name, namespace)
+        current = client.get_service(name, namespace)
         labels current.metadata.labels
 
         ports current.spec.ports
@@ -29,7 +27,6 @@ module KubernetesCookbook
         cluster_ip current.spec.clusterIP
         type current.spec.type
         external_ips current.spec.externalIPs
-        deprecated_public_ips current.spec.deprecatedPublicIPs
         session_affinity current.spec.sessionAffinity
         load_balancer_ip current.spec.loadBalancerIP
 
@@ -43,7 +40,7 @@ module KubernetesCookbook
 
     action :create do
       converge_if_changed do
-        obj = klass.new
+        obj = Kubeclient::Service.new
         obj.metadata = {}
         obj.metadata.name = name
         obj.metadata.namespace = namespace
@@ -55,11 +52,10 @@ module KubernetesCookbook
         obj.spec.clusterIP = cluster_ip
         obj.spec.type = type
         obj.spec.externalIPs = external_ips
-        obj.spec.deprecatedPublicIPs = deprecated_public_ips
         obj.spec.sessionAffinity = session_affinity
         obj.spec.loadBalancerIP = load_balancer_ip
 
-        create_item(obj)
+        client.create_service(obj)
       end
     end
 

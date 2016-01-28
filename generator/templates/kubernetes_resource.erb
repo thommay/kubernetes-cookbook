@@ -3,17 +3,15 @@ module KubernetesCookbook
 
     # <%= @description %>
     use_automatic_resource_name
-    @class_name = "<%= @class_name %>"
-    @type_name = "<%= @snake_name %>"
 
     <% @properties.reject{|p| !@properties[p].key?("property_name") }.each do |_name, prop| -%>
-      property :<%= prop["property_name"] %>, <%= prop["type"] %><% if prop["required"] -%>, required: true<% end -%>
+    property :<%= prop["property_name"] %>, <%= prop["type"] %><% if prop["required"] -%>, required: true<% end -%>
     <% end -%>
 
     load_current_value do
       retries = 3
       begin
-        current = get_item(name, namespace)
+        current = client.get_<%= @snake_name %>(name, namespace)
         labels current.metadata.labels
 
         <% @properties.reject{|p| !@properties[p].key?("property_name") }.each do |name, prop| -%>
@@ -30,7 +28,7 @@ module KubernetesCookbook
 
     action :create do
       converge_if_changed do
-        obj = klass.new
+        obj = Kubeclient::<%= @class_name %>.new
         obj.metadata = {}
         obj.metadata.name = name
         obj.metadata.namespace = namespace
@@ -41,7 +39,7 @@ module KubernetesCookbook
         obj.spec.<%= name %> = <%= prop["property_name"] %>
         <% end -%>
 
-        create_item(obj)
+        client.create_<%= @snake_name %>(obj)
       end
     end
 

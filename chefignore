@@ -102,3 +102,4 @@ Vagrantfile
 # Files used to generate libraries from the Swagger spec #
 ##########################################################
 generator/
+libraries/generated*.rb
