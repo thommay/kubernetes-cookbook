@@ -93,11 +93,17 @@ action :create do
       block do
         require "docker"
         Docker.url = bootstrap_docker_host
-        container = Docker::Container.get("flanneld")
-        config = container.exec(["cat", "/run/flannel/subnet.env"], stderr: false)
-        config[0][0].each_line do |ln|
-          k, v = ln.split("=")
-          node.run_state[k.downcase] = v.chomp
+        retries = 3
+        begin
+          container = Docker::Container.get("flanneld")
+          config = container.exec(["cat", "/run/flannel/subnet.env"], stderr: false)
+          config[0][0].each_line do |ln|
+            k, v = ln.split("=")
+            node.run_state[k.downcase] = v.chomp
+          end
+        rescue NoMethodError
+          retries -= 1
+          retry if retries >= 1
         end
       end
     end
