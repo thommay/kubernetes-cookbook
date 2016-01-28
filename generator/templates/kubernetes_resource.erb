@@ -1,0 +1,49 @@
+module KubernetesCookbook
+  class Kubernetes<%= @class_name %> < KubernetesBase
+
+    # <%= @description %>
+    use_automatic_resource_name
+    @class_name = "<%= @class_name %>"
+    @type_name = "<%= @snake_name %>"
+
+    <% @properties.reject{|p| !@properties[p].key?("property_name") }.each do |_name, prop| -%>
+      property :<%= prop["property_name"] %>, <%= prop["type"] %><% if prop["required"] -%>, required: true<% end -%>
+    <% end -%>
+
+    load_current_value do
+      retries = 3
+      begin
+        current = get_item(name, namespace)
+        labels current.metadata.labels
+
+        <% @properties.reject{|p| !@properties[p].key?("property_name") }.each do |name, prop| -%>
+        <%= prop["property_name"] %> current.spec.<%= name %>
+        <% end -%>
+
+      rescue Errno::ECONNREFUSED
+        retries -= 1
+        retry if retries >= 1
+      rescue ::KubeException
+        current_value_does_not_exist!
+      end
+    end
+
+    action :create do
+      converge_if_changed do
+        obj = klass.new
+        obj.metadata = {}
+        obj.metadata.name = name
+        obj.metadata.namespace = namespace
+        obj.metadata.labels = labels
+
+        obj.spec = {}
+        <% @properties.reject{|p| !@properties[p].key?("property_name") }.each do |name, prop| -%>
+        obj.spec.<%= name %> = <%= prop["property_name"] %>
+        <% end -%>
+
+        create_item(obj)
+      end
+    end
+
+  end
+end

@@ -98,3 +98,7 @@ Vagrantfile
 # Travis #
 ##########
 .travis.yml
+
+# Files used to generate libraries from the Swagger spec #
+##########################################################
+generator/

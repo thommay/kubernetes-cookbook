@@ -1,17 +1,18 @@
 module KubernetesCookbook
   class KubernetesService < KubernetesBase
 
+    # Service is a named abstraction of software service (for example, mysql) consisting of local port (for example 3306) that the proxy listens on, and the selector that determines which pods will answer requests sent through the proxy.
     use_automatic_resource_name
-    @type_name = "Service"
+    @class_name = "Service"
+    @type_name = "service"
 
-    property :selector, Hash, default: {}, coerce: proc { |v| coerce_selector(v) }
+    property :ports, Array, required: true, coerce: proc { |v| coerce_ports(v) }
+    property :selector, [Hash, nil], default: {}, coerce: proc { |v| coerce_selector(v) }
     property :cluster_ip, [String, nil], default: ""
-    property :type, String, default: "ClusterIP"
+    property :type, [String, nil], default: "ClusterIP"
     property :external_ips, [Array, nil]
     property :session_affinity, String, default: "None"
     property :load_balancer_ip, [String, nil]
-
-    property :ports, Array, required: true, coerce: proc { |v| coerce_ports(v) }
 
     def coerce_ports(entry)
       entry.map { |v| Hash(v).to_h }
@@ -20,15 +21,18 @@ module KubernetesCookbook
     load_current_value do
       retries = 3
       begin
-        service = client.get_service(name, namespace)
-        labels service.metadata["labels"]
-        selector service.spec.selector
-        ports service.spec.ports
-        cluster_ip service.spec.clusterIP
-        type service.spec.type
-        external_ips service.spec.externalIPs
-        session_affinity service.spec.sessionAffinity
-        load_balancer_ip service.spec.loadBalancerIP
+        current = get_item(name, namespace)
+        labels current.metadata.labels
+
+        ports current.spec.ports
+        selector current.spec.selector
+        cluster_ip current.spec.clusterIP
+        type current.spec.type
+        external_ips current.spec.externalIPs
+        deprecated_public_ips current.spec.deprecatedPublicIPs
+        session_affinity current.spec.sessionAffinity
+        load_balancer_ip current.spec.loadBalancerIP
+
       rescue Errno::ECONNREFUSED
         retries -= 1
         retry if retries >= 1
@@ -39,21 +43,23 @@ module KubernetesCookbook
 
     action :create do
       converge_if_changed do
-        service = Kubeclient::Service.new
-        service.metadata = {}
-        service.metadata.name = name
-        service.metadata.namespace = namespace
-        service.metadata.labels = labels
-        service.spec = {}
-        service.spec.selector = selector
-        service.spec.ports = ports
-        service.spec.type = type
-        service.spec.sessionAffinity = session_affinity
-        service.spec.loadBalancerIP = load_balancer_ip unless load_balancer_ip.nil?
-        service.spec.clusterIP = cluster_ip unless cluster_ip.nil?
-        service.spec.externalIPs = external_ips unless external_ips.nil?
+        obj = klass.new
+        obj.metadata = {}
+        obj.metadata.name = name
+        obj.metadata.namespace = namespace
+        obj.metadata.labels = labels
 
-        client.create_service(service)
+        obj.spec = {}
+        obj.spec.ports = ports
+        obj.spec.selector = selector
+        obj.spec.clusterIP = cluster_ip
+        obj.spec.type = type
+        obj.spec.externalIPs = external_ips
+        obj.spec.deprecatedPublicIPs = deprecated_public_ips
+        obj.spec.sessionAffinity = session_affinity
+        obj.spec.loadBalancerIP = load_balancer_ip
+
+        create_item(obj)
       end
     end
 
