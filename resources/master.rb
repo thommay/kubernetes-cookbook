@@ -23,6 +23,7 @@ property :bootstrap_docker_graph, String, default: "/var/lib/docker-bootstrap"
 property :bootstrap_docker_pid, String, default: "/var/run/docker-bootstrap.pid"
 
 property :docker_host, String, default: "unix:///var/run/docker.sock"
+property :additional_hosts, Array, default: []
 
 property :etcd_version, String, default: "2.2.4"
 property :etcd_repo, String, default: "quay.io/coreos/etcd", desired_state: false
@@ -113,7 +114,7 @@ action :create do
       install_method "none"
       bip lazy { node.run_state["flannel_subnet"].chomp }
       mtu lazy { node.run_state["flannel_mtu"].chomp }
-      host docker_host
+      host (additional_hosts << docker_host)
     end
 
     docker_image "hyperkube" do

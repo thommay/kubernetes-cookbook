@@ -11,7 +11,9 @@ end
 
 require 'kubeclient'
 
-kubernetes_master "my master"
+kubernetes_master "my master" do
+  additional_hosts ['tcp://0.0.0.0:4243']
+end
 
 kubernetes_service "nginx" do
   ports [{:protocol=>"TCP", :port=>80, :targetPort=>80}]
