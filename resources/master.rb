@@ -24,6 +24,7 @@ property :bootstrap_docker_pid, String, default: "/var/run/docker-bootstrap.pid"
 
 property :docker_host, String, default: "unix:///var/run/docker.sock"
 property :additional_hosts, Array, default: []
+property :insecure_registry, [String, nil], default: nil
 
 property :etcd_version, String, default: "2.2.4"
 property :etcd_repo, String, default: "quay.io/coreos/etcd", desired_state: false
@@ -115,6 +116,7 @@ action :create do
       bip lazy { node.run_state["flannel_subnet"].chomp }
       mtu lazy { node.run_state["flannel_mtu"].chomp }
       host (additional_hosts << docker_host)
+      insecure_registry(new_resource.insecure_registry) if new_resource.insecure_registry
     end
 
     docker_image "hyperkube" do

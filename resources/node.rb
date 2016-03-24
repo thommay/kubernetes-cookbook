@@ -26,6 +26,7 @@ property :bootstrap_docker_graph, String, default: "/var/lib/docker-bootstrap"
 property :bootstrap_docker_pid, String, default: "/var/run/docker-bootstrap.pid"
 
 property :docker_host, String, default: "unix:///var/run/docker.sock"
+property :insecure_registry, [String, nil], default: nil
 
 property :flanneld_version, String, default: "0.5.5"
 property :flanneld_repo, String, default: "quay.io/coreos/flannel", desired_state: false
@@ -89,6 +90,7 @@ action :create do
       bip lazy { node.run_state["flannel_subnet"].chomp }
       mtu lazy { node.run_state["flannel_mtu"].chomp }
       host docker_host
+      insecure_registry(new_resource.insecure_registry) if new_resource.insecure_registry
     end
 
     docker_image "hyperkube" do
