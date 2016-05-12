@@ -109,7 +109,7 @@ action :create do
       network_mode "host"
       privileged true
       pid_mode "host"
-      command "/hyperkube kubelet --api-servers=http://#{master_ip}:#{master_port} --v=2 --address=0.0.0.0 --enable-server --hostname-override=#{node['ipaddress']} --cluster-dns=10.0.0.10 --cluster-domain=cluster.local"
+      command "/hyperkube kubelet --api-servers=http://#{master_ip}:#{master_port} --v=2 --address=0.0.0.0 --enable-server --hostname-override=#{node['ipaddress']} --cluster-dns=10.0.0.10 --cluster-domain=cluster.local --allow-privileged=true"
     end
 
     docker_container "proxy" do
