@@ -13,6 +13,7 @@ require 'kubeclient'
 
 kubernetes_master "my master" do
   additional_hosts ['tcp://0.0.0.0:4243']
+  insecure_registry 'insecure_reg.com:5000'
 end
 
 kubernetes_service "nginx" do
